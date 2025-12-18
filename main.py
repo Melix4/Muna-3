@@ -29,8 +29,6 @@ def current_rocket_mass(t):
 
 # Функция рассчета гравитационного воздействия на ракету
 def gravity_force(d):
-    if d == 0:
-        return constants.g0 * constants.Rocket_Mass
     R = constants.Kerbin_Radius
     return constants.Rocket_Mass * constants.g0 * (R ** 2 / (R + d) ** 2)
 
