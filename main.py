@@ -15,11 +15,10 @@ def current_rocket_mass(t):
 
 # Функция рассчета гравитационного воздействия на ракету
 def gravity_force(d):
-    try:
-        return (constants.Gravity_Parametr * (constants.Kerbin_Mass - constants.Rocket_Mass) /
-                ((d + constants.Kerbin_Radius) ** 2))
-    except ZeroDivisionError:
-        return 0
+    if d == 0:
+        return constants.g0 * constants.Rocket_Mass
+    R = constants.Kerbin_Radius
+    return constants.Rocket_Mass * constants.g0 * (R ** 2 / (R + d) ** 2)
 
 
 # Функция, возвращающая реактивную тягу ракеты
@@ -34,24 +33,26 @@ def deltaV(t):
 
 
 # Функция рассчета ускорения ракеты в заданный момент времени t
-def acceleration(t):
-    return reactive_thrust() / current_rocket_mass(t)
+def acceleration(heightArray, t):
+    height = heightArray[-1]
+    return (reactive_thrust() - gravity_force(height)) / current_rocket_mass(t)
 
 
 # Функция, проводящая моделирование процесса полета и запись значений в списки
 def calc():
     timeArray = [i for i in range(constants.t + 1)] # Список временных значений
     massArray = [current_rocket_mass(time) for time in timeArray] # Список масс ракеты для каждого времени
-    accelerationArray = [acceleration(time) for time in timeArray] # Список значений ускорения ракеты для каждого времени
     speedArray = [deltaV(time) for time in timeArray] # Список значений скорости ракеты для каждого времени
 
     # Заполнение значениями списка высот ракеты относительно Кербина для каждого времени
     heightArray = [0]
+    accelerationArray = [acceleration(heightArray, 0)]
     for time in timeArray[1:]:
-        # dH - изменение высоты за 1с
-        dH = max(0, deltaV(time) - gravity_force(heightArray[-1]))
-        currentHeight = heightArray[-1] + dH
+        v = speedArray[time]
+        a = acceleration(heightArray, time)
+        currentHeight = heightArray[-1] + v + 0.5 * a
         heightArray.append(currentHeight)
+        accelerationArray.append(a)
 
     gravityForceArray = [gravity_force(d) for d in heightArray] # Список значений силы гравитации для каждого времени
     # Возврат списков значений
@@ -73,4 +74,5 @@ def write_to_xls():
     df.to_excel('data.xlsx', sheet_name='Data', index=False)
 
 if __name__ == '__main__':
-    write_to_xls()
+    calc()
+    #write_to_xls()
