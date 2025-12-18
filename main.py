@@ -23,7 +23,7 @@ def fuel_consumption(t):
 def current_rocket_mass(t):
     s = stage(t)
     if s == 1:
-        constants.Rocket_Mass - fuel_consumption(t) * t
+        return constants.Rocket_Mass - fuel_consumption(t) * t
     return constants.Rocket_Mass - constants.M1 - fuel_consumption(t) * (t - constants.time_of_stages[0])
 
 
@@ -54,17 +54,20 @@ def acceleration(heightArray, t):
 def calc():
     timeArray = [i for i in range(constants.t + 1)]  # Список временных значений
     massArray = [current_rocket_mass(time) for time in timeArray]  # Список масс ракеты для каждого времени
-    speedArray = [deltaV(time) for time in timeArray]  # Список значений скорости ракеты для каждого времени
-
+    #speedArray = [deltaV(time) for time in timeArray]  # Список значений скорости ракеты для каждого времени
+    speedArray = [0]
     # Заполнение значениями списка высот ракеты относительно Кербина для каждого времени
     heightArray = [0]
+
     accelerationArray = [acceleration(heightArray, 0)]
     for time in timeArray[1:]:
-        v = speedArray[time]
+        v = speedArray[-1]
         a = acceleration(heightArray, time)
-        currentHeight = heightArray[-1] + v + 0.5 * a
+        v += a
+        currentHeight = heightArray[-1] + v
         heightArray.append(currentHeight)
         accelerationArray.append(a)
+        speedArray.append(v)
 
     gravityForceArray = [gravity_force(d) for d in heightArray]  # Список значений силы гравитации для каждого времени
     # Возврат списков значений
