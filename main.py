@@ -6,7 +6,7 @@ import openpyxl
 
 # Возвращает номер ступени в зависимости от времени
 def stage(t):
-    if 0 <= t <= 24:
+    if 0 <= t <= 25:
         return 1
     return 2
 
@@ -36,12 +36,14 @@ def gravity_force(d):
 # Функция, возвращающая реактивную тягу ракеты
 def reactive_thrust(t):
     # Т.к. Isp = Ve / g0, то
-    return constants.Isp * constants.g0 * fuel_consumption(t)
+    s = stage(t)
+    return constants.Isp[s - 1] * constants.g0 * fuel_consumption(t)
 
 
 # Функция, рассчитывающая характеристическую скорость ракеты по формуле Циолковского
 def deltaV(t):
-    return constants.Isp * constants.g0 * math.log(constants.Rocket_Mass / current_rocket_mass(t))
+    s = stage(t)
+    return constants.Isp[s - 1] * constants.g0 * math.log(constants.Rocket_Mass / current_rocket_mass(t))
 
 
 # Функция рассчета ускорения ракеты в заданный момент времени t
@@ -54,7 +56,7 @@ def acceleration(heightArray, t):
 def calc():
     timeArray = [i for i in range(constants.t + 1)]  # Список временных значений
     massArray = [current_rocket_mass(time) for time in timeArray]  # Список масс ракеты для каждого времени
-    #speedArray = [deltaV(time) for time in timeArray]  # Список значений скорости ракеты для каждого времени
+    # speedArray = [deltaV(time) for time in timeArray]  # Список значений скорости ракеты для каждого времени
     speedArray = [0]
     # Заполнение значениями списка высот ракеты относительно Кербина для каждого времени
     heightArray = [0]
@@ -90,6 +92,29 @@ def write_to_xls():
     df.to_excel('data.xlsx', sheet_name='Data', index=False)
 
 
+# Забираем данные, полученные автопилотом
+def data_from_ksp():
+    # чтение данных из файла
+    with open('ascent_data.csv', 'r', encoding='utf-8') as f:
+        data = f.readlines()
+    massArray = [0] * (constants.t + 1)
+    altitudeArray = [0] * (constants.t + 1)
+    data = data[1:]
+    for x in data:
+        # разбиваем каждую строку по запятой, выбираем необходимые элементы
+        x = x.split(',')
+        time = int(float(x[0]))
+        mass = float(x[1])
+        altitude = float(x[2])
+
+        # записываем выбранные данные в списки
+        if time <= constants.t:
+            massArray[time] = mass
+            altitudeArray[time] = altitude
+    massArray[-1] = massArray[-2]
+    altitudeArray[-1] = altitudeArray[-2]
+    return massArray, altitudeArray
+
+
 if __name__ == '__main__':
     calc()
-    # write_to_xls()

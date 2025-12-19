@@ -9,6 +9,8 @@ if not os.path.isdir("Graphics"):  # папка для хранения граф
 # Получение всех необходимых массивов
 massArray, accelerationArray, heightArray, speedArray, gravityForceArray, time = main.calc()
 
+massArrayKSP, altitudeArrayKSP = main.data_from_ksp()
+
 # График №1: Зависимость массы ракеты от времени
 massGraph = plt.figure("Масса", figsize=(10, 5), dpi=150)
 plt.plot(time, massArray, 'g')
@@ -48,3 +50,21 @@ plt.title("Сила гравитации от высоты")
 plt.xlabel('Высота, м')
 plt.ylabel('Сила гравитационного притяжения, Н')
 gravityForceGraph.savefig("Graphics/gravityForceGraph.png")
+
+# Сравнение графиков масс
+compMass = plt.figure("Сравнение масс", figsize=(10, 5), dpi=150)
+plt.plot(time, massArray, label='Данные с физ.модели')
+plt.plot(time, massArrayKSP, label='Данные c ksp')
+plt.xlabel('Время, с')
+plt.ylabel('Масса, кг')
+plt.title('Сравнение масс')
+compMass.savefig("Graphics/comparisonMass.png")
+
+# Сравнение графиков высот
+compHeight = plt.figure("Сравнение высот", figsize=(10, 5), dpi=150)
+plt.plot(time, heightArray, label='Данные с физ.модели')
+plt.plot(time, altitudeArrayKSP, label='Данные с ksp')
+plt.xlabel('Время, с')
+plt.ylabel('Высота, м')
+plt.title('Сравнение высот')
+compHeight.savefig("Graphics/comparisonHeight.png")
