@@ -17,11 +17,11 @@ def stage(t):
 
 def angle(h):
     h = h - constants.Kerbin_Radius
-    if h <= 10000:
+    if h <= 20000:
         return 90
-    elif h >= 20000:
+    elif h >= 25000:
         return 45
-    return 90 - ((h - 10000) / (20000 - 10000) * 45)
+    return 90 - ((h - 20000) / (25000 - 20000) * 45)
 
 
 # Функция рассчета коэффициента расхода топлива
@@ -86,6 +86,7 @@ class State:
         self.angle = angle
 
     def get_next_state(self, time):
+        dt = 0.01
         m0 = self.m
         h = self.y_pos
         Ro = pressure(h)
@@ -98,7 +99,7 @@ class State:
             vx_direction = math.cos(math.radians(self.angle))
             vy_direction = math.sin(math.radians(self.angle))
 
-        F_thrust = reactive_thrust(time)
+        F_thrust = reactive_thrust(time) * dt
         F_gravity = gravity_force(h, m0)
         F_drag = drag_force(v, Ro)
         phi = math.radians(angle(h))
@@ -112,8 +113,8 @@ class State:
         F_gravity_x = 0
         F_gravity_y = -F_gravity
 
-        F_total_x = F_thrust_x + F_drag_x + F_gravity_x
-        F_total_y = F_thrust_y + F_drag_y + F_gravity_y
+        F_total_x = (F_thrust_x + F_drag_x + F_gravity_x) * dt
+        F_total_y = (F_thrust_y + F_drag_y + F_gravity_y) * dt
 
         # ускорения(второй закон Ньютона)
         ax = F_total_x / m0
@@ -132,6 +133,7 @@ class State:
 # Функция, проводящая моделирование процесса полета и запись значений в списки
 def calc():
     time = 0
+    dt = 0.01
     state = zero_state()
     timeArray, massArray, velocityArray, heightArray, thrustArray, gravityArray, dragArray, RoArray = (
         [], [], [], [], [], [], [], [])
@@ -143,9 +145,9 @@ def calc():
         massArray.append(state.get_array_state()[0])
         velocityArray.append(state.get_array_state()[4])
         heightArray.append(state.get_array_state()[2] - constants.Kerbin_Radius)
-        time += 1
+        time += dt
     thrustArray = [reactive_thrust(t) for t in timeArray]
-    gravityArray = [gravity_force(heightArray[t], massArray[t]) for t in range(constants.t + 1)]
+    gravityArray = [gravity_force(heightArray[t], massArray[t]) for t in range(len(timeArray))]
     RoArray = [pressure(h) for h in heightArray]
     dragArray = [drag_force(velocityArray[t], RoArray[t]) for t in range(len(velocityArray))]
     return timeArray, massArray, velocityArray, heightArray, thrustArray, gravityArray, dragArray, RoArray
