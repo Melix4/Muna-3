@@ -17,11 +17,11 @@ def stage(t):
 
 def angle(h):
     h = h - constants.Kerbin_Radius
-    if h <= 20000:
+    if h <= 10000:
         return 90
-    elif h >= 25000:
+    elif h >= 20000:
         return 45
-    return 90 - ((h - 20000) / (25000 - 20000) * 45)
+    return 90 - ((h - 10000) / (20000 - 10000) * 45)
 
 
 # Функция рассчета коэффициента расхода топлива
@@ -113,8 +113,8 @@ class State:
         F_gravity_x = 0
         F_gravity_y = -F_gravity
 
-        F_total_x = (F_thrust_x + F_drag_x + F_gravity_x) * dt
-        F_total_y = (F_thrust_y + F_drag_y + F_gravity_y) * dt
+        F_total_x = (F_thrust_x + F_drag_x + F_gravity_x)
+        F_total_y = (F_thrust_y + F_drag_y + F_gravity_y)
 
         # ускорения(второй закон Ньютона)
         ax = F_total_x / m0
@@ -122,7 +122,7 @@ class State:
 
         self.vx += ax
         self.vy += ay
-        state_arr = [current_rocket_mass(time), self.x_pos + self.vx, self.y_pos + self.vy,
+        state_arr = [current_rocket_mass(time), self.x_pos + self.vx * dt, self.y_pos + self.vy * dt,
                      self.vx, self.vy, ax, ay, angle(self.y_pos)]
         return State(*state_arr)
 
