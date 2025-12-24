@@ -16,7 +16,6 @@ def stage(t):
 
 
 def angle(h):
-    h = h - constants.Kerbin_Radius
     if h <= 10000:
         return 90
     elif h >= 20000:
@@ -86,9 +85,8 @@ class State:
         self.angle = angle
 
     def get_next_state(self, time):
-        dt = 0.01
         m0 = self.m
-        h = self.y_pos
+        h = self.y_pos - constants.Kerbin_Radius
         Ro = pressure(h)
         v = vector_length((self.vx, self.vy))
 
@@ -99,7 +97,7 @@ class State:
             vx_direction = math.cos(math.radians(self.angle))
             vy_direction = math.sin(math.radians(self.angle))
 
-        F_thrust = reactive_thrust(time) * dt
+        F_thrust = reactive_thrust(time)
         F_gravity = gravity_force(h, m0)
         F_drag = drag_force(v, Ro)
         phi = math.radians(angle(h))
@@ -116,9 +114,10 @@ class State:
         F_total_x = (F_thrust_x + F_drag_x + F_gravity_x)
         F_total_y = (F_thrust_y + F_drag_y + F_gravity_y)
 
+        dt = 0.01
         # ускорения(второй закон Ньютона)
-        ax = F_total_x / m0
-        ay = F_total_y / m0
+        ax = (F_total_x / m0) * dt
+        ay = (F_total_y / m0) * dt
 
         self.vx += ax
         self.vy += ay
