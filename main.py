@@ -53,10 +53,12 @@ def reactive_thrust(t):
 
 
 # сила сопротивления среды (воздуха) в Ньютонах
-def drag_force(velocity, Ro):
-    # return (constants.Cf * Ro * velocity ** 2 * constants.S) / 2
-    return 0
+def drag_force(velocity, ro):
+    return (constants.Cf * ro * velocity ** 2 * constants.S) / 2
 
+
+def Ro(P):
+    return P * constants.Molar_Mass / (constants.R * constants.T)
 
 # атмосферное давление от высоты
 def pressure(h):
@@ -87,7 +89,7 @@ class State:
     def get_next_state(self, time):
         m0 = self.m
         h = self.y_pos - constants.Kerbin_Radius
-        Ro = pressure(h)
+        ro = Ro(pressure(h))
         v = vector_length((self.vx, self.vy))
 
         if v != 0:
@@ -99,7 +101,7 @@ class State:
 
         F_thrust = reactive_thrust(time)
         F_gravity = gravity_force(h, m0)
-        F_drag = drag_force(v, Ro)
+        F_drag = drag_force(v, ro)
         phi = math.radians(angle(h))
 
         F_thrust_x = F_thrust * math.cos(phi)
@@ -147,7 +149,7 @@ def calc():
         time += dt
     thrustArray = [reactive_thrust(t) for t in timeArray]
     gravityArray = [gravity_force(heightArray[t], massArray[t]) for t in range(len(timeArray))]
-    RoArray = [pressure(h) for h in heightArray]
+    RoArray = [Ro(pressure(h)) for h in heightArray]
     dragArray = [drag_force(velocityArray[t], RoArray[t]) for t in range(len(velocityArray))]
     return timeArray, massArray, velocityArray, heightArray, thrustArray, gravityArray, dragArray, RoArray
 
