@@ -176,25 +176,35 @@ def write_to_xls():
 # Забираем данные, полученные автопилотом
 def data_from_ksp():
     # чтение данных из файла
-    with open('ascent_data.csv', 'r', encoding='utf-8') as f:
+    with open('telemetry.csv', 'r', encoding='utf-8') as f:
         data = f.readlines()
-    massArray = [0] * (constants.t + 1)
-    altitudeArray = [0] * (constants.t + 1)
+    massArray = []
+    altitudeArray = []
+    speedArray = []
     data = data[1:]
+    d = {}
     for x in data:
         # разбиваем каждую строку по запятой, выбираем необходимые элементы
         x = x.split(',')
-        time = int(float(x[0]) * 10)
-        mass = float(x[1])
-        altitude = float(x[2])
+        time = int(float(x[0]) * 100)
+        mass = float(x[5])
+        speed = float(x[3])
+        print(speed)
+        altitude = float(x[1])
+        d[time] = [mass, altitude, speed]
 
-        # записываем выбранные данные в списки
-        if time <= constants.t:
-            massArray[time] = mass
-            altitudeArray[time] = altitude
-    massArray[-1] = massArray[-2]
-    altitudeArray[-1] = altitudeArray[-2]
-    return massArray, altitudeArray
+    t = 0
+    dt = 0.01
+    timeArray = []
+    while t <= constants.t:
+        if int(t * 100) in d.keys():
+            timeArray.append(t)
+            row = d[int(t * 100)]
+            massArray.append(row[0])
+            altitudeArray.append(row[1])
+            speedArray.append(row[2])
+        t += dt
+    return timeArray, massArray, altitudeArray, speedArray
 
 
 if __name__ == '__main__':
