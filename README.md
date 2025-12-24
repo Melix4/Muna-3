@@ -9,11 +9,15 @@ grapics.py - запустить для построения графиков
 
 main.py - программа, проводящая основные рассчеты. Записывает данные в excel-файл
 
+auto_pilot.py - автопилот выхода на орбиту Кербина
+prototype.py - прототип автопилота для всего полёта на Муну
+
 Для установки необходимых библиотек нужно выполнить команду
 
 pip install -r requirements.txt
 
-[Видео-Запись Полета](https://youtu.be/K4AWhO-2q00)
+
+[Видео-Запись Полета (прототип полёта на Муну в описании к видео)](https://youtu.be/K4AWhO-2q00)
 
 
 [Гугл папка с отчётом и презентацией](https://drive.google.com/drive/folders/1st-meP0ui-qlQuQ39AsTFtFx4QwR4CXo?usp=drive_link)
