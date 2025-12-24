@@ -19,5 +19,3 @@ pip install -r requirements.txt
 
 [Видео-Запись Полета (прототип полёта на Муну в описании к видео)](https://youtu.be/K4AWhO-2q00)
 
-
-[Гугл папка с отчётом и презентацией](https://drive.google.com/drive/folders/1st-meP0ui-qlQuQ39AsTFtFx4QwR4CXo?usp=drive_link)
