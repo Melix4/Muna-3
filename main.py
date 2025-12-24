@@ -17,14 +17,16 @@ def stage(t):
 
 def angle(h):
     if h <= 10000:
-        return 90
-    elif h >= 20000:
-        return 45
-    return 90 - ((h - 10000) / (20000 - 10000) * 45)
+        return 88
+    elif h >= 10000 and h <= 20000:
+        return 90 - ((h - 10000) / (20000 - 10000) * 45)
+    return 90 - ((h - 20000) / (85000 - 20000) * 90)
 
 
 # Функция рассчета коэффициента расхода топлива
 def fuel_consumption(t):
+    if 78 <= t <= 167:
+        return 0
     s = stage(t)
     if s == 1:
         return constants.Mf1 / constants.time_of_stages[0]
@@ -33,6 +35,10 @@ def fuel_consumption(t):
 
 # Функция, рассчитывающая массу ракеты в заданный момент времени t
 def current_rocket_mass(t):
+    if 78 <= t <= 167:
+        return current_rocket_mass(77)
+    elif t > 167:
+        return current_rocket_mass(77) - fuel_consumption(t) * (t - 167)
     s = stage(t)
     if s == 1:
         return constants.Rocket_Mass - fuel_consumption(t) * t
@@ -48,6 +54,8 @@ def gravity_force(d, m0):
 # Функция, возвращающая реактивную тягу ракеты
 def reactive_thrust(t):
     # Т.к. Isp = Ve / g0, то
+    if 78 <= t <= 167:
+        return 0
     s = stage(t)
     return constants.Isp[s - 1] * constants.g0 * fuel_consumption(t)
 
@@ -63,12 +71,6 @@ def Ro(P):
 # атмосферное давление от высоты
 def pressure(h):
     return constants.Pressure * math.exp(-(constants.Molar_Mass * constants.g0 * h) / (constants.R * constants.T))
-
-
-# ускорение, м/с^2
-def acceleration(ForceOfThrust, ForceOfGravity, ForceOfAirResistance, Angle, mass):
-    return ((abs(ForceOfThrust * math.cos(math.radians(Angle)) + ForceOfGravity[0] + ForceOfAirResistance[0])) / mass,
-            abs((ForceOfThrust * math.sin(math.radians(Angle)) + ForceOfGravity[1] + ForceOfAirResistance[1]) / mass))
 
 
 def zero_state():
@@ -110,9 +112,9 @@ class State:
         F_drag_x = -F_drag * vx_direction
         F_drag_y = -F_drag * vy_direction
 
+
         F_gravity_x = 0
         F_gravity_y = -F_gravity
-
         F_total_x = (F_thrust_x + F_drag_x + F_gravity_x)
         F_total_y = (F_thrust_y + F_drag_y + F_gravity_y)
 
@@ -120,10 +122,9 @@ class State:
         # ускорения(второй закон Ньютона)
         ax = (F_total_x / m0) * dt
         ay = (F_total_y / m0) * dt
-
         self.vx += ax
         self.vy += ay
-        state_arr = [current_rocket_mass(time), self.x_pos + self.vx * dt, self.y_pos + self.vy * dt,
+        state_arr = [current_rocket_mass(time), self.x_pos + self.vx * dt, self.y_pos + math.sin(phi) * self.vy * dt,
                      self.vx, self.vy, ax, ay, angle(self.y_pos)]
         return State(*state_arr)
 
@@ -136,22 +137,25 @@ def calc():
     time = 0
     dt = 0.01
     state = zero_state()
-    timeArray, massArray, velocityArray, heightArray, thrustArray, gravityArray, dragArray, RoArray = (
-        [], [], [], [], [], [], [], [])
+    timeArray, massArray, velocityArray, velocityX_Array, velocityY_Array, heightArray, thrustArray, gravityArray, dragArray, RoArray = (
+        [], [], [], [], [], [], [], [], [], [])
     while time <= constants.t:
         state = State(*state.get_array_state())
         state = state.get_next_state(time)
-        print(*state.get_array_state())
+        #print(*state.get_array_state())
+        data_state = state.get_array_state()
         timeArray.append(time)
-        massArray.append(state.get_array_state()[0])
-        velocityArray.append(state.get_array_state()[4])
+        massArray.append(data_state[0])
+        velocityY_Array.append((data_state[1] * data_state[3] + data_state[2] * data_state[4])
+                             / vector_length((data_state[1], data_state[2])))
+        velocityArray.append(vector_length((data_state[3], data_state[4])))
         heightArray.append(state.get_array_state()[2] - constants.Kerbin_Radius)
         time += dt
     thrustArray = [reactive_thrust(t) for t in timeArray]
     gravityArray = [gravity_force(heightArray[t], massArray[t]) for t in range(len(timeArray))]
     RoArray = [Ro(pressure(h)) for h in heightArray]
     dragArray = [drag_force(velocityArray[t], RoArray[t]) for t in range(len(velocityArray))]
-    return timeArray, massArray, velocityArray, heightArray, thrustArray, gravityArray, dragArray, RoArray
+    return timeArray, massArray, velocityArray, velocityY_Array, heightArray, thrustArray, gravityArray, dragArray, RoArray
 
 
 # Функция записи данных в Excel-файл
@@ -180,7 +184,7 @@ def data_from_ksp():
         data = f.readlines()
     massArray = []
     altitudeArray = []
-    speedArray = []
+    speedY_Array = []
     data = data[1:]
     d = {}
     for x in data:
@@ -188,10 +192,9 @@ def data_from_ksp():
         x = x.split(',')
         time = int(float(x[0]) * 100)
         mass = float(x[5])
-        speed = float(x[3])
-        print(speed)
+        speedY = float(x[4])
         altitude = float(x[1])
-        d[time] = [mass, altitude, speed]
+        d[time] = [mass, altitude, speedY]
 
     t = 0
     dt = 0.01
@@ -202,9 +205,9 @@ def data_from_ksp():
             row = d[int(t * 100)]
             massArray.append(row[0])
             altitudeArray.append(row[1])
-            speedArray.append(row[2])
+            speedY_Array.append(row[2])
         t += dt
-    return timeArray, massArray, altitudeArray, speedArray
+    return timeArray, massArray, altitudeArray, speedY_Array
 
 
 if __name__ == '__main__':
