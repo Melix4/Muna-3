@@ -9,7 +9,7 @@ if not os.path.isdir("Graphics"):  # папка для хранения граф
 # Получение всех необходимых массивов
 timeArray, massArray, velocityArray, velocityY_Array, heightArray, thrustArray, gravityArray, dragArray, RoArray = main.calc()
 
-timeArrayKSP, massArrayKSP, altitudeArrayKSP, speedY_ArrayKSP = main.data_from_ksp()
+timeArrayKSP, massArrayKSP, altitudeArrayKSP, velocityArrayKSP, speedY_ArrayKSP = main.data_from_ksp()
 
 # График №1: Зависимость массы ракеты от времени
 massGraph = plt.figure("Масса", figsize=(10, 5), dpi=150)
@@ -67,7 +67,6 @@ plt.xlabel('Время, с')
 plt.ylabel('Сила тяги, H')
 thrustGraph.savefig("Graphics/thrustGraph.png")
 
-
 # График №8: Сравнение масс ksp и модели
 compGraph1 = plt.figure("Сравнение масс", figsize=(10, 5), dpi=150)
 plt.plot(timeArray, massArray, 'g')
@@ -76,7 +75,6 @@ plt.title("Масса от времени")
 plt.xlabel('Время, с')
 plt.ylabel('Масса, кг')
 compGraph1.savefig("Graphics/compGraph1.png")
-
 
 # График №9: Сравнение высот ksp и модели
 compGraph2 = plt.figure("Сравнение высот", figsize=(10, 5), dpi=150)
@@ -87,11 +85,10 @@ plt.xlabel('Время, с')
 plt.ylabel('Высота, м')
 compGraph2.savefig("Graphics/compGraph2.png")
 
-
 # График №10: Сравнение скоростей ksp и модели
-compGraph3 = plt.figure("Вертикальная скорость", figsize=(10, 5), dpi=150)
-plt.plot(timeArray, velocityY_Array, 'g')
-plt.plot(timeArrayKSP, speedY_ArrayKSP, 'r')
+compGraph3 = plt.figure("Сравнение скорости", figsize=(10, 5), dpi=150)
+plt.plot(timeArray, velocityArray, 'g')
+plt.plot(timeArrayKSP, velocityArrayKSP, 'r')
 plt.title("Скорость от времени")
 plt.xlabel('Время, с')
 plt.ylabel('Скорость, м/с')

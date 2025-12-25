@@ -3,7 +3,6 @@ import math
 import pandas as pd
 import openpyxl
 
-
 def vector_length(vec):
     return (vec[0] ** 2 + vec[1] ** 2) ** 0.5
 
@@ -18,19 +17,21 @@ def stage(t):
 def angle(h):
     if h <= 10000:
         return 88
-    elif h >= 10000 and h <= 20000:
+    elif h > 10000 and h <= 20000:
         return 90 - ((h - 10000) / (20000 - 10000) * 45)
     return 90 - ((h - 20000) / (85000 - 20000) * 90)
 
 
 # Функция рассчета коэффициента расхода топлива
 def fuel_consumption(t):
-    if 78 <= t <= 167:
-        return 0
-    s = stage(t)
-    if s == 1:
+    if t <= 25:
         return constants.Mf1 / constants.time_of_stages[0]
-    return constants.Mf2 / constants.time_of_stages[1]
+    elif 25 < t < 78:
+        return (constants.Mf2 / 2) /  (78 - 25)
+    elif 78 <= t <= 167:
+        return 0
+    elif t > 167:
+        return (constants.Mf2 / 2) / (216 - 167)
 
 
 # Функция, рассчитывающая массу ракеты в заданный момент времени t
@@ -112,9 +113,13 @@ class State:
         F_drag_x = -F_drag * vx_direction
         F_drag_y = -F_drag * vy_direction
 
+        if time <= 25:
+            F_gravity_x = 0
+            F_gravity_y = -F_gravity
+        else:
+            F_gravity_x = -(constants.Gravity_Parametr * m0) / (vector_length((self.x_pos, self.y_pos)) ** 3) * self.x_pos
+            F_gravity_y = -(constants.Gravity_Parametr * m0) / (vector_length((self.x_pos, self.y_pos)) ** 3) * self.y_pos
 
-        F_gravity_x = 0
-        F_gravity_y = -F_gravity
         F_total_x = (F_thrust_x + F_drag_x + F_gravity_x)
         F_total_y = (F_thrust_y + F_drag_y + F_gravity_y)
 
@@ -146,8 +151,7 @@ def calc():
         data_state = state.get_array_state()
         timeArray.append(time)
         massArray.append(data_state[0])
-        velocityY_Array.append((data_state[1] * data_state[3] + data_state[2] * data_state[4])
-                             / vector_length((data_state[1], data_state[2])))
+        velocityY_Array.append(data_state[4])
         velocityArray.append(vector_length((data_state[3], data_state[4])))
         heightArray.append(state.get_array_state()[2] - constants.Kerbin_Radius)
         time += dt
@@ -185,6 +189,7 @@ def data_from_ksp():
     massArray = []
     altitudeArray = []
     speedY_Array = []
+    velocityArray = []
     data = data[1:]
     d = {}
     for x in data:
@@ -192,9 +197,10 @@ def data_from_ksp():
         x = x.split(',')
         time = int(float(x[0]) * 100)
         mass = float(x[5])
+        velocity = float(x[3])
         speedY = float(x[4])
         altitude = float(x[1])
-        d[time] = [mass, altitude, speedY]
+        d[time] = [mass, altitude, velocity, speedY]
 
     t = 0
     dt = 0.01
@@ -205,9 +211,10 @@ def data_from_ksp():
             row = d[int(t * 100)]
             massArray.append(row[0])
             altitudeArray.append(row[1])
-            speedY_Array.append(row[2])
+            velocityArray.append(row[2])
+            speedY_Array.append(row[3])
         t += dt
-    return timeArray, massArray, altitudeArray, speedY_Array
+    return timeArray, massArray, altitudeArray, velocityArray, speedY_Array
 
 
 if __name__ == '__main__':
